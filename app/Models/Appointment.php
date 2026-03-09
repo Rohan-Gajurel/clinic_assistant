@@ -34,4 +34,10 @@ class Appointment extends Model
     {
         return $this->hasMany(Followup::class);
     }
+
+    public function labOrders()
+    {
+        return $this->hasMany(LabOrder::class);
+    }
+
 }

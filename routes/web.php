@@ -8,8 +8,10 @@ use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\FollowupController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\LabCategoryController;
+use App\Http\Controllers\LabController;
 use App\Http\Controllers\LabGroupController;
 use App\Http\Controllers\LabMethodController;
+use App\Http\Controllers\LabOrderController;
 use App\Http\Controllers\LabSampleController;
 use App\Http\Controllers\LabTestController;
 use App\Http\Controllers\PatientController;
@@ -157,6 +159,7 @@ Route::prefix('visit')->controller(VisitController::class)->group(function(){
     Route::post('/store-examination', 'storeExamination')->name('visit.storeExamination');
     Route::post('/store-vitals', 'upsertVitals')->name('visit.storeVitals');
     Route::post('/store-disease-history', 'storeDiseaseHistory')->name('visit.storeDiseaseHistory');
+    Route::post('/store-lab-order', 'storeLabOrders')->name('visit.storeLabOrders');
 });
 
 
@@ -220,6 +223,22 @@ Route::prefix('bills')->controller(BillController::class)->group(function(){
     Route::get('/{id}/edit', 'edit')->name('bills.edit');
     Route::put('/{id}', 'update')->name('bills.update');
     Route::delete('/{id}', 'destroy')->name('bills.destroy');
+});
+
+Route::prefix('lab-orders')->controller(LabOrderController::class)->group(function(){
+    Route::get('/{id}', 'show')->name('lab-orders.show');
+    
+});
+
+// Lab Module Routes
+Route::prefix('lab')->controller(LabController::class)->group(function(){
+    Route::get('/sample-collection', 'sampleCollection')->name('lab.sample-collection');
+    Route::post('/collect-sample/{id}', 'collectSample')->name('lab.collect-sample');
+    Route::get('/result-entries', 'resultEntries')->name('lab.result-entries');
+    Route::post('/enter-results/{id}', 'enterResults')->name('lab.enter-results');
+    Route::get('/result-dispatch', 'resultDispatch')->name('lab.result-dispatch');
+    Route::post('/dispatch-result/{id}', 'dispatchResult')->name('lab.dispatch-result');
+    Route::get('/print-report/{id}', 'printReport')->name('lab.print-report');
 });
 
 require __DIR__.'/settings.php';

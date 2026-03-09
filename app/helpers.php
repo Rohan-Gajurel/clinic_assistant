@@ -24,7 +24,7 @@ function searchServices($query)
                 'name' => $item->name,
                 'code' => $item->code,
                 'price' => $item->price,
-                'type' => 'test'
+                'type' => 'App\\Models\\LabTest'
             ];
         });
     $labgroups = LabGroup::where('name', 'like', "%{$query}%")
@@ -37,7 +37,7 @@ function searchServices($query)
                 'name' => $item->name,
                 'code' => null,
                 'price' => $item->charge_amount,
-                'type' => 'group'
+                'type' => 'App\\Models\\LabGroup'
             ];
         });
 

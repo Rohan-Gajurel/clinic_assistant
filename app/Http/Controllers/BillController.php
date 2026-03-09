@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bill;
 use App\Models\BillItem;
+use App\Models\LabOrder;
 use App\Models\LabTest;
 use App\Models\Patient;
 use Illuminate\Http\Request;
@@ -16,9 +17,19 @@ class BillController extends Controller
         return view('backend.bill.bill', compact('bills'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('backend.bill.create');
+        $labOrder = null;
+
+        $labOrderId = $request->query('lab_order_id');
+        if ($labOrderId) {
+            $labOrder = LabOrder::with([
+                'services.service_',
+                'appointment.patient',
+            ])->findOrFail($labOrderId);
+        }
+
+        return view('backend.bill.create', compact('labOrder'));
     }
 
     public function store(Request $request)
@@ -30,6 +41,8 @@ class BillController extends Controller
             'net_amount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.service_name' => 'required|string|max:255',
+            'items.*.service_type' => 'nullable|string|max:255',
+            'items.*.service_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.rate' => 'required|numeric|min:0',
             'items.*.amount' => 'required|numeric|min:0',
@@ -48,12 +61,15 @@ class BillController extends Controller
         foreach ($data['items'] as $item) {
             BillItem::create([
                 'bill_id' => $bill->id,
+                'service_type' => $item['service_type'] ?? null,
+                'service_id' => $item['service_id'] ?? null,
                 'service_name' => $item['service_name'],
                 'quantity' => $item['quantity'],
                 'rate' => $item['rate'],
                 'amount' => $item['amount'],
                 'discount' => $item['discount'] ?? 0,
                 'net_amount' => $item['net_amount'],
+                'sample_status' => 'pending',
             ]);
         }
 
@@ -111,6 +127,8 @@ class BillController extends Controller
             'net_amount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.service_name' => 'required|string|max:255',
+            'items.*.service_type' => 'nullable|string|max:255',
+            'items.*.service_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.rate' => 'required|numeric|min:0',
             'items.*.amount' => 'required|numeric|min:0',
@@ -130,12 +148,15 @@ class BillController extends Controller
         foreach ($data['items'] as $item) {
             BillItem::create([
                 'bill_id' => $bill->id,
+                'service_type' => $item['service_type'] ?? null,
+                'service_id' => $item['service_id'] ?? null,
                 'service_name' => $item['service_name'],
                 'quantity' => $item['quantity'],
                 'rate' => $item['rate'],
                 'amount' => $item['amount'],
                 'discount' => $item['discount'] ?? 0,
                 'net_amount' => $item['net_amount'],
+                'sample_status' => 'pending',
             ]);
         }
 

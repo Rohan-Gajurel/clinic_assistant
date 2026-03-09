@@ -37,4 +37,14 @@ class LabTest extends Model
     {
         return $this->belongsTo(LabSample::class, 'sample_id');
     }
+
+    public function services()
+    {
+        return $this->morphMany(Service::class, 'service');
+    }
+
+    public function labResults()
+    {
+        return $this->hasMany(LabResult::class);
+    }
 }

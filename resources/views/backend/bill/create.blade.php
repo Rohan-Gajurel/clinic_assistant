@@ -51,8 +51,24 @@
                         <div @class(['col-md-6', 'mb-3'])>
                             <label @class(['form-label'])>Search Patient <span @class(['text-danger'])>*</span></label>
                             <div @class(['position-relative'])>
-                                <input type="text" id="patientSearch" @class(['form-control']) placeholder="Search by name, phone or email..." autocomplete="off">
-                                <input type="hidden" name="patient_id" id="patientId" required>
+                                <input
+                                    type="text"
+                                    id="patientSearch"
+                                    @class(['form-control'])
+                                    placeholder="Search by name, phone or email..."
+                                    autocomplete="off"
+                                    @if(isset($labOrder) && $labOrder->appointment && $labOrder->appointment->patient)
+                                        value="{{ $labOrder->appointment->patient->full_name }}"
+                                        readonly
+                                    @endif
+                                >
+                                <input
+                                    type="hidden"
+                                    name="patient_id"
+                                    id="patientId"
+                                    value="{{ isset($labOrder) && $labOrder->appointment ? $labOrder->appointment->patient_id : old('patient_id') }}"
+                                    required
+                                >
                                 <div id="patientResults" @class(['position-absolute', 'w-100', 'bg-white', 'border', 'rounded', 'shadow-sm']) style="display: none; z-index: 1000; max-height: 250px; overflow-y: auto;"></div>
                             </div>
                         </div>
@@ -72,15 +88,33 @@
                             <div @class(['row'])>
                                 <div @class(['col-md-4', 'mb-3'])>
                                     <label @class(['form-label'])>Name</label>
-                                    <input type="text" name="patient_name" @class(['form-control']) value="{{ old('patient_name') }}" readonly>
+                                    <input
+                                        type="text"
+                                        name="patient_name"
+                                        @class(['form-control'])
+                                        value="{{ isset($labOrder) && $labOrder->appointment && $labOrder->appointment->patient ? $labOrder->appointment->patient->full_name : old('patient_name') }}"
+                                        readonly
+                                    >
                                 </div>
                                 <div @class(['col-md-4', 'mb-3'])>
                                     <label @class(['form-label'])>Age</label>
-                                    <input type="text" name="patient_age" @class(['form-control']) value="{{ old('patient_age') }}" readonly>
+                                    <input
+                                        type="text"
+                                        name="patient_age"
+                                        @class(['form-control'])
+                                        value="{{ isset($labOrder) && $labOrder->appointment && $labOrder->appointment->patient ? $labOrder->appointment->patient->age : old('patient_age') }}"
+                                        readonly
+                                    >
                                 </div>
                                 <div @class(['col-md-4', 'mb-3'])>
                                     <label @class(['form-label'])>Gender</label>
-                                    <input type="text" name="patient_gender" @class(['form-control']) value="{{ old('patient_gender') }}" readonly>
+                                    <input
+                                        type="text"
+                                        name="patient_gender"
+                                        @class(['form-control'])
+                                        value="{{ isset($labOrder) && $labOrder->appointment && $labOrder->appointment->patient ? ucfirst($labOrder->appointment->patient->sex) : old('patient_gender') }}"
+                                        readonly
+                                    >
                                 </div>
                             </div>
                         </div>
@@ -109,35 +143,78 @@
                                         </tr>
                                     </thead>
                                     <tbody id="itemsBody">
-                                        <tr @class(['item-row'])>
-                                            <td @class(['row-number'])>1</td>
-                                            <td @class(['position-relative'])>
-                                                <input type="text" @class(['form-control', 'form-control-sm', 'service-search']) placeholder="Type to search..." autocomplete="off">
-                                                <input type="hidden" name="items[0][service_id]" @class(['service-id'])>
-                                                <input type="hidden" name="items[0][service_name]" @class(['service-name'])>
-                                                <div @class(['service-results', 'position-absolute', 'w-100', 'bg-white', 'border', 'rounded', 'shadow-sm']) style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="items[0][quantity]" @class(['form-control', 'form-control-sm', 'qty-input']) value="1" min="1" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="items[0][rate]" @class(['form-control', 'form-control-sm', 'rate-input']) step="0.01" min="0" value="0" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="items[0][amount]" @class(['form-control', 'form-control-sm', 'amount-input']) step="0.01" readonly>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="items[0][discount]" @class(['form-control', 'form-control-sm', 'discount-input']) step="0.01" min="0" value="0">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="items[0][net_amount]" @class(['form-control', 'form-control-sm', 'net-input']) step="0.01" readonly>
-                                            </td>
-                                            <td @class(['text-center'])>
-                                                <button type="button" @class(['btn', 'btn-sm', 'btn-outline-danger', 'remove-item']) disabled>
-                                                    <i @class(['bi', 'bi-trash'])></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        @if(isset($labOrder) && $labOrder->services->isNotEmpty())
+                                            @php $rowIndex = 0; @endphp
+                                            @foreach($labOrder->services as $index => $service)
+                                                @php
+                                                    $model = $service->service_;
+                                                    $name = $model->name ?? 'N/A';
+                                                    $price = $model->price ?? $model->charge_amount ?? 0;
+                                                @endphp
+                                                <tr class="item-row">
+                                                    <td class="row-number">{{ $index + 1 }}</td>
+                                                    <td class="position-relative">
+                                                        <input
+                                                            type="text"
+                                                            class="form-control form-control-sm service-search"
+                                                            value="{{ $name }}"
+                                                            readonly
+                                                        >
+                                                        <input type="hidden" name="items[{{ $rowIndex }}][service_name]" value="{{ $name }}" class="service-name">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="items[{{ $rowIndex }}][quantity]" class="form-control form-control-sm qty-input" value="1" min="1" required>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="items[{{ $rowIndex }}][rate]" class="form-control form-control-sm rate-input" step="0.01" min="0" value="{{ $price }}" required>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="items[{{ $rowIndex }}][amount]" class="form-control form-control-sm amount-input" step="0.01" readonly>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="items[{{ $rowIndex }}][discount]" class="form-control form-control-sm discount-input" step="0.01" min="0" value="0">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="items[{{ $rowIndex }}][net_amount]" class="form-control form-control-sm net-input" step="0.01" readonly>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                @php $rowIndex++; @endphp
+                                            @endforeach
+                                        @else
+                                            <tr class="item-row">
+                                                <td class="row-number">1</td>
+                                                <td class="position-relative">
+                                                    <input type="text" class="form-control form-control-sm service-search" placeholder="Type to search..." autocomplete="off">
+                                                    <input type="hidden" name="items[0][service_name]" class="service-name">
+                                                    <div class="service-results position-absolute w-100 bg-white border rounded shadow-sm" style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="items[0][quantity]" class="form-control form-control-sm qty-input" value="1" min="1" required>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="items[0][rate]" class="form-control form-control-sm rate-input" step="0.01" min="0" value="0" required>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="items[0][amount]" class="form-control form-control-sm amount-input" step="0.01" readonly>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="items[0][discount]" class="form-control form-control-sm discount-input" step="0.01" min="0" value="0">
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="items[0][net_amount]" class="form-control form-control-sm net-input" step="0.01" readonly>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-item" disabled>
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>
@@ -194,7 +271,7 @@
 @push('script')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        let itemIndex = 1;
+        let itemIndex = document.querySelectorAll('.item-row').length || 1;
 
         // Add new item row
         document.getElementById('addItemBtn').addEventListener('click', function() {
@@ -202,31 +279,30 @@
             const newRow = document.createElement('tr');
             newRow.className = 'item-row';
             newRow.innerHTML = `
-                <td @class(['row-number'])>${itemIndex + 1}</td>
-                <td @class(['position-relative'])>
-                    <input type="text" @class(['form-control', 'form-control-sm', 'service-search']) placeholder="Type to search..." autocomplete="off">
-                    <input type="hidden" name="items[${itemIndex}][service_id]" @class(['service-id'])>
-                    <input type="hidden" name="items[${itemIndex}][service_name]" @class(['service-name'])>
-                    <div @class(['service-results', 'position-absolute', 'w-100', 'bg-white', 'border', 'rounded', 'shadow-sm']) style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                <td class="row-number">${itemIndex + 1}</td>
+                <td class="position-relative">
+                    <input type="text" class="form-control form-control-sm service-search" placeholder="Type to search..." autocomplete="off">
+                    <input type="hidden" name="items[${itemIndex}][service_name]" class="service-name">
+                    <div class="service-results position-absolute w-100 bg-white border rounded shadow-sm" style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
                 </td>
                 <td>
-                    <input type="number" name="items[${itemIndex}][quantity]" @class(['form-control', 'form-control-sm', 'qty-input']) value="1" min="1" required>
+                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control form-control-sm qty-input" value="1" min="1" required>
                 </td>
                 <td>
-                    <input type="number" name="items[${itemIndex}][rate]" @class(['form-control', 'form-control-sm', 'rate-input']) step="0.01" min="0" value="0" required>
+                    <input type="number" name="items[${itemIndex}][rate]" class="form-control form-control-sm rate-input" step="0.01" min="0" value="0" required>
                 </td>
                 <td>
-                    <input type="number" name="items[${itemIndex}][amount]" @class(['form-control', 'form-control-sm', 'amount-input']) step="0.01" readonly>
+                    <input type="number" name="items[${itemIndex}][amount]" class="form-control form-control-sm amount-input" step="0.01" readonly>
                 </td>
                 <td>
-                    <input type="number" name="items[${itemIndex}][discount]" @class(['form-control', 'form-control-sm', 'discount-input']) step="0.01" min="0" value="0">
+                    <input type="number" name="items[${itemIndex}][discount]" class="form-control form-control-sm discount-input" step="0.01" min="0" value="0">
                 </td>
                 <td>
-                    <input type="number" name="items[${itemIndex}][net_amount]" @class(['form-control', 'form-control-sm', 'net-input']) step="0.01" readonly>
+                    <input type="number" name="items[${itemIndex}][net_amount]" class="form-control form-control-sm net-input" step="0.01" readonly>
                 </td>
-                <td @class(['text-center'])>
-                    <button type="button" @class(['btn', 'btn-sm', 'btn-outline-danger', 'remove-item'])>
-                        <i @class(['bi', 'bi-trash'])></i>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </td>
             `;
@@ -250,8 +326,8 @@
             }
         });
 
-        // Attach events to initial row
-        attachRowEvents(document.querySelector('.item-row'));
+        // Attach events to initial rows
+        document.querySelectorAll('.item-row').forEach(row => attachRowEvents(row));
 
         function attachRowEvents(row) {
             const qtyInput = row.querySelector('.qty-input');
@@ -466,7 +542,6 @@
             if (item) {
                 const row = item.closest('.item-row');
                 const serviceInput = row.querySelector('.service-search');
-                const serviceId = row.querySelector('.service-id');
                 const serviceName = row.querySelector('.service-name');
                 const rateInput = row.querySelector('.rate-input');
                 const resultsDiv = row.querySelector('.service-results');
@@ -475,7 +550,6 @@
                 const name = item.dataset.name;
                 const price = parseFloat(item.dataset.price) || 0;
 
-                serviceId.value = id;
                 serviceName.value = name;
                 serviceInput.value = name;
                 rateInput.value = price.toFixed(2);

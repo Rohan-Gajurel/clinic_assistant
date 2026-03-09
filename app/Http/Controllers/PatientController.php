@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LabOrder;
 use App\Models\Patient;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -141,7 +143,12 @@ class PatientController extends Controller
             }
         }
 
-        return view('backend.patients.visit_details', compact('patient', 'currentAppointment'));
+            $labOrders = LabOrder::where('appointment_id', $currentAppointment->id)->get(['id']);
+            $services = collect();
+            if ($labOrders->isNotEmpty()) {
+                $services = Service::whereIn('lab_order_id', $labOrders->pluck('id'))->get();
+            }
+        return view('backend.patients.visit_details', compact('patient', 'currentAppointment', 'labOrders', 'services'));
     }
 
 }

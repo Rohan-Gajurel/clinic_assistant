@@ -23,4 +23,8 @@ class LabGroup extends Model
     {
         return $this->belongsToMany(LabTest::class, 'lab_group_test', 'group_id', 'test_id');
     }
+
+    public function labOrders(){
+        return $this->hasMany(LabOrder::class, 'service');
+    }
 }

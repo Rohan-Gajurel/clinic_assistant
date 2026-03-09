@@ -97,4 +97,54 @@
     </div>
 </div>
 
+<!-- Doctor Orders Section -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-clipboard-check me-2" style="color: var(--primary-color);"></i>Lab Orders Made by Doctors
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Doctor</th>
+                        <th>Patient</th>
+                        <th>Order Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @php
+                    $labOrders = \App\Models\LabOrder::with(['appointment.doctor.user', 'appointment.patient'])->latest()->take(20)->get();
+                @endphp
+                @forelse($labOrders as $index => $order)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $order->appointment && $order->appointment->doctor ? ($order->appointment->doctor->user->name ?? 'N/A') : 'N/A' }}</td>
+                        <td>{{ $order->appointment && $order->appointment->patient ? ($order->appointment->patient->full_name ?? 'N/A') : 'N/A' }}</td>
+                        <td>{{ $order->created_at ? \Carbon\Carbon::parse($order->created_at)->format('d M, Y') : '' }}</td>
+                        <td>
+                            <a href="{{ route('lab-orders.show', $order->id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                        
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No lab orders found
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 @endsection

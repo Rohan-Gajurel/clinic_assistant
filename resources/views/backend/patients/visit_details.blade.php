@@ -535,13 +535,27 @@
                                     <th style="width: 10%;"></th>
                                 </tr>
                             </thead>
+                            <form id="labOrderForm" method="POST" action="{{ route('visit.storeLabOrders') }}">
+                                
+                                @csrf
+                                @if($errors->any())
+                                    <div class="alert alert-danger">
+                                        <strong>Please fix the errors below:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                <input type="hidden" name="appointment_id" value="{{ $currentAppointment->id ?? '' }}">
                             <tbody id="itemsBody">
                                 <tr class="item-row">
                                     <td>1</td>
                                     <td class="position-relative">
                                         <input type="text" class="form-control form-control-sm service-search" placeholder="Type to search..." autocomplete="off">
                                         <input type="hidden" name="lab_orders[0][service_id]" class="service-id">
-                                        <input type="hidden" name="lab_orders[0][service_name]" class="service-name">
+                                        <input type="hidden" name="lab_orders[0][service_type]" class="service-type">
                                         <div class="service-results position-absolute w-100 bg-white border rounded shadow-sm" style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
                                     </td>
                                     <td><input type="text" class="form-control form-control-sm" name="lab_orders[0][service_code]" placeholder="Service code" readonly></td>
@@ -552,14 +566,13 @@
                                     </td>
                                 </tr>
                             </tbody>
+                            
                         </table>
-                        <button type="button" @class(['btn', 'btn-primary', 'btn-sm']) id="addLaborderRow2">
-                            <i @class(['bi', 'bi-plus-lg', 'me-1'])></i>
+                        <button type="button" id="addLaborderRow2" class="btn btn-sm btn-primary">Add Service</button>
+                        <button type="submit" class="btn btn-success btn-sm ms-2">
+                            <i class="bi bi-check-circle me-1"></i>Save Lab Orders
                         </button>
-                        <button type="submit" @class(['btn', 'btn-success', 'btn-sm', 'ms-2'])>
-                            <i @class(['bi', 'bi-check-circle', 'me-1'])></i>Save Lab Orders
-                        </button>
-                   
+                   </form>
                         
                     </div>
             </div>
@@ -698,7 +711,7 @@
                     <td class="position-relative">
                         <input type="text" class="form-control form-control-sm service-search" placeholder="Type to search..." autocomplete="off">
                         <input type="hidden" name="lab_orders[${rowCount}][service_id]" class="service-id">
-                        <input type="hidden" name="lab_orders[${rowCount}][service_name]" class="service-name">
+                        <input type="hidden" name="lab_orders[${rowCount}][service_type]" class="service-type">
                         <div class="service-results position-absolute w-100 bg-white border rounded shadow-sm" style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
                     </td>
                     <td><input type="text" class="form-control form-control-sm" name="lab_orders[${rowCount}][service_code]" placeholder="Service code" readonly></td>
@@ -797,21 +810,20 @@
                 const item = e.target.closest('.service-item');
                 if (item) {
                     const row = item.closest('.item-row');
-                    const serviceInput = row.querySelector('.service-search');
                     const serviceId = row.querySelector('.service-id');
-                    const serviceName = row.querySelector('.service-name');
-                    const resultsDiv = row.querySelector('.service-results');
-                    const id = item.dataset.id;
-                    const name = item.dataset.name;
-                    const code = item.dataset.code || '';
-                    const price = parseFloat(item.dataset.price) || 0;
-                    serviceId.value = id;
-                    serviceName.value = name;
-                    serviceInput.value = name;
-                    // Optionally fill code/price fields if you want:
-                    row.querySelector('input[name*="service_code"]').value = code;
-                    // row.querySelector('input[name*="rate"]').value = price.toFixed(2); // Uncomment if you want to fill rate
-                    resultsDiv.style.display = 'none';
+                    const serviceType = row.querySelector('.service-type');
+                    const serviceInput = row.querySelector('.service-search');
+
+                    // Populate service_id and service_type with valid values
+                    serviceId.value = item.dataset.id;
+                    serviceType.value = item.dataset.type === 'LabTest' ? 'App\\Models\\LabTest' : 'App\\Models\\LabGroup';
+                    serviceInput.value = item.dataset.name;
+
+                    // Ensure service_id is valid and matches the dataset
+                    if (!serviceId.value) {
+                        alert('Invalid service selected. Please try again.');
+                        return;
+                    }
                 }
             });
 

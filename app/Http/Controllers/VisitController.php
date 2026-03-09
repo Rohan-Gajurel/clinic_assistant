@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
+use App\Models\BillItem;
 use App\Models\DiseaseHistory;
+use App\Models\LabOrder;
 use App\Models\ObservationExamination;
 use App\Models\ObservationVital;
 use App\Models\Patient;
+use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VisitController extends Controller
 {
@@ -107,4 +113,40 @@ class VisitController extends Controller
 
         return redirect()->back()->with('success', 'Disease and drug history saved successfully.');
     }
+
+    public function storeLabOrders(Request $request)
+    {
+        $data = $request->validate([
+            'appointment_id' => 'required|exists:appointments,id',
+            'lab_orders' => 'required|array|min:1',
+            'lab_orders.*.service_id' => 'required|integer',
+            'lab_orders.*.service_type' => 'required|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $labOrder = LabOrder::create([
+                'appointment_id' => $data['appointment_id'],
+            ]);
+
+            // Log each service being processed
+            foreach ($data['lab_orders'] as $index => $order) {
+                Log::info("Processing service #{$index}", $order);
+
+                Service::create([
+                    'service_id' => $order['service_id'],
+                    'service_type' => $order['service_type'],
+                    'lab_order_id' => $labOrder->id,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Lab orders saved successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error saving lab orders: '.$e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while saving lab orders. Please try again.');
+        }
+    }
+
 }

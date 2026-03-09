@@ -68,9 +68,40 @@
 
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('bills.index') ? 'active' : '' }}" href="{{ route('bills.index') }}">
-                        <i class="bi bi-bell"></i>
+                        <i class="bi bi-receipt"></i>
                         Bills
                     </a>
+                </li>
+
+                <!-- Lab -->
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center {{ request()->routeIs('lab.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#labSubmenu2" role="button" aria-expanded="{{ request()->routeIs('lab.*') ? 'true' : 'false' }}" aria-controls="labSubmenu2">
+                        <i class="bi bi-droplet-half"></i>
+                        <span class="flex-grow-1">Lab</span>
+                        <i class="bi bi-chevron-down ms-auto" style="font-size: 0.75rem;"></i>
+                    </a>
+                    <div class="collapse submenu {{ request()->routeIs('lab.*') ? 'show' : '' }}" id="labSubmenu2">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('lab.sample-collection') ? 'active' : '' }}" href="{{ route('lab.sample-collection') }}">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.4rem;"></i>
+                                    Sample Collection
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('lab.result-entries') ? 'active' : '' }}" href="{{ route('lab.result-entries') }}">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.4rem;"></i>
+                                    Result Entries
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('lab.result-dispatch') ? 'active' : '' }}" href="{{ route('lab.result-dispatch') }}">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.4rem;"></i>
+                                    Result Dispatch
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
 
 
