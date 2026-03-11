@@ -60,13 +60,6 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('reminders.index') ? 'active' : '' }}" href="{{ route('reminders.index') }}">
-                        <i class="bi bi-bell"></i>
-                        Reminders
-                    </a>
-                </li>
-
-                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('bills.index') ? 'active' : '' }}" href="{{ route('bills.index') }}">
                         <i class="bi bi-receipt"></i>
                         Bills

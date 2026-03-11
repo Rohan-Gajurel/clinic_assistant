@@ -142,31 +142,27 @@
                         <h5 class="fw-bold mb-4">Vitals</h5>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Blood pressure</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $vitals->blood_pressure ?? '-' }}</span>
                         </div>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Pulse</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $vitals->heart_rate ?? '-' }}</span>
                         </div>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Height</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $vitals->height ?? '-' }}</span>
                         </div>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Weight</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $vitals->weight ?? '-' }}</span>
                         </div>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Temperature</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $vitals->temperature ?? '-' }}</span>
                         </div>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Respiratory rate</span>
-                            <span class="text-muted">-</span>
-                        </div>
-                        <div class="mb-3 d-flex justify-content-between">
-                            <span class="text-primary fw-semibold">Blood oxygen saturation</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $vitals->respiratory_rate ?? '-' }}</span>
                         </div>
                     </div>
                 </div>
@@ -177,12 +173,18 @@
                         <h5 class="fw-bold mb-4">Examinations</h5>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">Primary symptoms</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $examination->primary_symptom ?? '-' }}</span>
                         </div>
                         <div class="mb-3 d-flex justify-content-between">
                             <span class="text-primary fw-semibold">For</span>
-                            <span class="text-muted">-</span>
+                            <span class="text-muted">{{ $examination ? ($examination->symptom_duration_value . ' ' . $examination->symptom_duration_unit) : '-' }}</span>
                         </div>
+                        @if($examination && $examination->other_symptoms)
+                        <div class="mb-3 d-flex justify-content-between">
+                            <span class="text-primary fw-semibold">Other symptoms</span>
+                            <span class="text-muted">{{ $examination->other_symptoms }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -238,45 +240,252 @@
                                     <thead class="bg-light">
                                         <tr>
                                             <th style="width: 8%;">S.N</th>
-                                            <th style="width: 25%;">Diagnosis</th>
-                                            <th style="width: 15%;">Order</th>
-                                            <th style="width: 15%;">Certainty</th>
-                                            <th style="width: 20%;">Remarks</th>
-                                            <th style="width: 12%;">Actions</th>
+                                            <th style="width: 30%;">Primary Diagnosis</th>
+                                            <th style="width: 30%;">Secondary Diagnosis</th>
+                                            <th style="width: 17%;">Follow-up (Days)</th>
+                                            <th style="width: 15%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @forelse($diagnoses as $index => $diagnosis)
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted">No diagnosis records</td>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $diagnosis->primary_diagnosis }}</td>
+                                            <td>{{ $diagnosis->secondary_diagnosis ?? '-' }}</td>
+                                            <td>{{ $diagnosis->follow_up_days ?? '-' }}</td>
+                                            <td>
+                                                <form action="{{ route('visit.destroyDiagnosis', $diagnosis->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this diagnosis?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                         </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">No diagnosis records</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+
+                                <!-- Disease History Section -->
+                                <h5 class="fw-bold mb-3 mt-4">Disease History</h5>
+                                <table class="table table-bordered">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 8%;">S.N</th>
+                                            <th style="width: 30%;">Disease Name</th>
+                                            <th style="width: 20%;">Duration</th>
+                                            <th style="width: 20%;">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($diseaseHistories as $index => $disease)
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $disease->name }}</td>
+                                            <td>{{ $disease->duration_value ?? '-' }} {{ ucfirst($disease->duration_unit ?? '') }}</td>
+                                            <td>
+                                                <span class="badge {{ $disease->status ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $disease->status ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No disease history</td>
+                                        </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
 
                             <!-- Lab Results Tab -->
                             <div class="tab-pane fade" id="lab-results" role="tabpanel">
-                                <h5 class="fw-bold mb-3">Lab Results</h5>
+                                <!-- Lab Orders Section -->
+                                <h5 class="fw-bold mb-3">Lab Orders</h5>
                                 <table class="table table-bordered">
                                     <thead class="bg-light">
                                         <tr>
                                             <th style="width: 8%;">S.N</th>
-                                            <th style="width: 30%;">Test Name</th>
-                                            <th style="width: 20%;">Service Category</th>
-                                            <th style="width: 20%;">Service Type</th>
+                                            <th style="width: 35%;">Test/Group Name</th>
+                                            <th style="width: 15%;">Type</th>
+                                            <th style="width: 20%;">Status</th>
                                             <th style="width: 12%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @forelse($labOrders as $index => $labOrder)
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted">No lab results</td>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $labOrder->service->name ?? 'N/A' }}</td>
+                                            <td>
+                                                @if($labOrder->service_type == 'App\\Models\\LabTest')
+                                                    <span class="badge bg-info">Test</span>
+                                                @elseif($labOrder->service_type == 'App\\Models\\LabGroup')
+                                                    <span class="badge bg-primary">Group</span>
+                                                @else
+                                                    <span class="badge bg-secondary">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $labOrder->status == 'completed' ? 'bg-success' : 'bg-warning' }}">
+                                                    {{ ucfirst($labOrder->status ?? 'pending') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('lab-orders.show', $labOrder->id) }}" class="btn btn-sm btn-outline-info" title="View Order">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
                                         </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted">No lab orders</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
+
+                                <!-- Dispatched Lab Results Section -->
+                                @if(isset($dispatchedResults) && $dispatchedResults->count() > 0)
+                                <h5 class="fw-bold mb-3 mt-4">
+                                    <i class="bi bi-clipboard-check text-success me-2"></i>Dispatched Lab Results
+                                </h5>
+                                @foreach($dispatchedResults as $item)
+                                    @php
+                                        $isLabGroup = $item->isLabGroup();
+                                        $tests = $item->getTests();
+                                    @endphp
+                                    <div class="card mb-3 border-success">
+                                        <div class="card-header bg-success bg-opacity-10 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ $item->service_name }}</strong>
+                                                @if($isLabGroup)
+                                                    <span class="badge bg-primary ms-2">Group ({{ $tests->count() }} tests)</span>
+                                                @else
+                                                    <span class="badge bg-info ms-2">Single Test</span>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Dispatched
+                                                </span>
+                                                <small class="text-muted ms-2">Sample: {{ $item->sample_id ?? 'N/A' }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <table class="table table-sm table-bordered mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width: 5%;">#</th>
+                                                        <th style="width: 25%;">Test Name</th>
+                                                        <th style="width: 20%;">Result</th>
+                                                        <th style="width: 20%;">Reference Range</th>
+                                                        <th style="width: 15%;">Status</th>
+                                                        <th style="width: 15%;">Remarks</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse($item->labResults as $resultIndex => $result)
+                                                        @php
+                                                            $statusClass = match($result->status) {
+                                                                'normal' => 'bg-success',
+                                                                'low', 'high' => 'bg-warning',
+                                                                'critical_low', 'critical_high', 'critical' => 'bg-danger',
+                                                                default => 'bg-secondary'
+                                                            };
+                                                            $resultValue = $result->numeric_value ?? $result->text_value ?? 'N/A';
+                                                        @endphp
+                                                        <tr>
+                                                            <td>{{ $resultIndex + 1 }}</td>
+                                                            <td><strong>{{ $result->labTest->name ?? 'Unknown Test' }}</strong></td>
+                                                            <td>
+                                                                <span class="fw-bold {{ in_array($result->status, ['low', 'high', 'critical_low', 'critical_high', 'critical']) ? 'text-danger' : '' }}">
+                                                                    {{ $resultValue }} {{ $result->unit ?? '' }}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                @if($result->reference_from && $result->reference_to)
+                                                                    {{ $result->reference_from }} - {{ $result->reference_to }} {{ $result->unit ?? '' }}
+                                                                @else
+                                                                    N/A
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge {{ $statusClass }}">
+                                                                    {{ ucfirst(str_replace('_', ' ', $result->status)) }}
+                                                                </span>
+                                                            </td>
+                                                            <td>{{ $result->remarks ?? '-' }}</td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="6" class="text-center text-muted">No results recorded</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="card-footer bg-light small text-muted">
+                                            <i class="bi bi-person me-1"></i>Technician: {{ $item->labResults->first()->entered_by ?? 'N/A' }}
+                                            <span class="mx-2">|</span>
+                                            <i class="bi bi-calendar me-1"></i>Entered: {{ optional($item->labResults->first()->entered_at)->format('d M, Y H:i') ?? 'N/A' }}
+                                        </div>
+                                    </div>
+                                @endforeach
+                                @endif
                             </div>
 
                             <!-- Medication Tab -->
                             <div class="tab-pane fade" id="medication-details" role="tabpanel">
-                                <h5 class="fw-bold mb-3">Medication</h5>
+                                <h5 class="fw-bold mb-3">Current Visit Medications</h5>
+                                <table class="table table-bordered">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 5%;">S.N</th>
+                                            <th style="width: 18%;">Drug Name</th>
+                                            <th style="width: 10%;">Route</th>
+                                            <th style="width: 12%;">Dose</th>
+                                            <th style="width: 15%;">Frequency</th>
+                                            <th style="width: 15%;">Duration</th>
+                                            <th style="width: 17%;">Instructions</th>
+                                            <th style="width: 8%;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($medications as $index => $med)
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $med->drug_name }}</td>
+                                            <td>{{ ucfirst($med->route ?? '-') }}</td>
+                                            <td>{{ $med->dose ?? '-' }} {{ $med->dose_unit ?? '' }}</td>
+                                            <td>{{ $med->formatted_frequency ?? '-' }}</td>
+                                            <td>{{ $med->duration_value ?? '-' }} {{ ucfirst($med->duration_unit ?? '') }}</td>
+                                            <td>{{ $med->instructions ?? '-' }}</td>
+                                            <td>
+                                                <form action="{{ route('visit.destroyMedication', $med->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted">No medications prescribed for this visit</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+
+                                <!-- Drug History Section -->
+                                <h5 class="fw-bold mb-3 mt-4">Drug History</h5>
                                 <table class="table table-bordered">
                                     <thead class="bg-light">
                                         <tr>
@@ -284,14 +493,29 @@
                                             <th style="width: 25%;">Drug Name</th>
                                             <th style="width: 15%;">Dose</th>
                                             <th style="width: 15%;">Frequency</th>
-                                            <th style="width: 20%;">Instructions</th>
-                                            <th style="width: 12%;">Actions</th>
+                                            <th style="width: 20%;">For</th>
+                                            <th style="width: 12%;">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @forelse($drugHistories as $index => $drug)
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted">No medication records</td>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $drug->drug_name ?? '-' }}</td>
+                                            <td>{{ $drug->drug_dose ?? '-' }} {{ $drug->dose_unit ?? '' }}</td>
+                                            <td>{{ ucfirst(str_replace('_', ' ', $drug->drug_frequency ?? '-')) }}</td>
+                                            <td>{{ $drug->drug_for ?? '-' }}</td>
+                                            <td>
+                                                <span class="badge {{ $drug->status ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $drug->status ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td>
                                         </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No drug history records</td>
+                                        </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -325,11 +549,11 @@
                     
                     <div @class(['col-md-6', 'mb-3'])>
                         <label @class(['form-label'])>Primary Symptom</label>
-                        <input type="text" @class(['form-control']) name="primary_symptom" placeholder="Enter primary symptom...">
+                        <input type="text" @class(['form-control']) name="primary_symptom" value="{{ $examination->primary_symptom ?? '' }}" placeholder="Enter primary symptom...">
                     </div>
                     <div @class(['col-md-6', 'mb-3'])>
                         <label @class(['form-label'])>For how long?</label>
-                        <input type="text" @class(['form-control']) name="symptom_duration_value" placeholder="Duration of symptoms...">
+                        <input type="text" @class(['form-control']) name="symptom_duration_value" value="{{ $examination->symptom_duration_value ?? '' }}" placeholder="Duration of symptoms...">
                     </div>
                     </div>
                     <div @class(['row'])>
@@ -337,15 +561,15 @@
                         <label @class(['form-label'])>Duration of Symptoms</label>
                         <select @class(['form-select']) name="symptom_duration_unit">
                             <option value="">Select duration</option>
-                            <option value="days">Days</option>
-                            <option value="weeks">Weeks</option>
-                            <option value="months">Months</option>
-                            <option value="years">Years</option>
+                            <option value="days" {{ ($examination->symptom_duration_unit ?? '') == 'days' ? 'selected' : '' }}>Days</option>
+                            <option value="weeks" {{ ($examination->symptom_duration_unit ?? '') == 'weeks' ? 'selected' : '' }}>Weeks</option>
+                            <option value="months" {{ ($examination->symptom_duration_unit ?? '') == 'months' ? 'selected' : '' }}>Months</option>
+                            <option value="years" {{ ($examination->symptom_duration_unit ?? '') == 'years' ? 'selected' : '' }}>Years</option>
                         </select>
                     </div>
                     <div @class(['col-md-6', 'mb-3'])>
                         <label @class(['form-label'])>Other Symptoms</label>
-                        <input type="text" @class(['form-control']) name="other_symptoms" placeholder="Enter other symptoms if any...">   
+                        <input type="text" @class(['form-control']) name="other_symptoms" value="{{ $examination->other_symptoms ?? '' }}" placeholder="Enter other symptoms if any...">   
                     </div>
                     </div>
                 <button type="submit" @class(['btn', 'btn-primary', 'btn-sm'])>
@@ -371,31 +595,31 @@
                 <div @class(['row'])>
                     <div @class(['col-md-6', 'mb-3'])>
                         <small @class(['text-muted', 'd-block'])>Blood Pressure</small>
-                        <input name="blood_pressure" type="text" @class(['form-control']) value="{{ $patient->observationVitals->blood_pressure ?? '120/80 mmHg' }}">
+                        <input name="blood_pressure" type="text" @class(['form-control']) value="{{ $vitals->blood_pressure ?? '' }}" placeholder="e.g., 120/80 mmHg">
                     </div>
                     <div @class(['col-md-6', 'mb-3'])>
                         <small @class(['text-muted', 'd-block'])>Pulse</small>
-                        <input name="heart_rate" type="text" @class(['form-control']) value="{{ $patient->observationVitals->heart_rate ?? '72 bpm' }}">
+                        <input name="heart_rate" type="text" @class(['form-control']) value="{{ $vitals->heart_rate ?? '' }}" placeholder="e.g., 72 bpm">
                     </div>
                     <div @class(['col-md-6', 'mb-3'])>
                         <small @class(['text-muted', 'd-block'])>Temperature</small>
-                        <input name="temperature" type="text" @class(['form-control']) value="{{ $patient->observationVitals->temperature ?? '98.6°F' }}">
+                        <input name="temperature" type="text" @class(['form-control']) value="{{ $vitals->temperature ?? '' }}" placeholder="e.g., 98.6°F">
                     </div>
                     <div @class(['col-md-6', 'mb-3'])>
                         <small @class(['text-muted', 'd-block'])>Respiratory Rate</small>
-                        <input name="respiratory_rate" type="text" @class(['form-control']) value="{{ $patient->observationVitals->respiratory_rate ?? '16 breaths/min' }}">
+                        <input name="respiratory_rate" type="text" @class(['form-control']) value="{{ $vitals->respiratory_rate ?? '' }}" placeholder="e.g., 16 breaths/min">
                     </div>
                     <div @class(['col-md-6'])>
                         <small @class(['text-muted', 'd-block'])>Height</small>
-                        <input type="text" name="height" @class(['form-control']) value="{{ $patient->observationVitals->height ?? '5\'10"' }}">
+                        <input type="text" name="height" @class(['form-control']) value="{{ $vitals->height ?? '' }}" placeholder="e.g., 5'10\"">
                     </div>
                     <div @class(['col-md-6'])>
                         <small @class(['text-muted', 'd-block'])>Weight</small>
-                        <input type="text" name="weight" @class(['form-control']) value="{{ $patient->observationVitals->weight ?? '70 kg' }}">
+                        <input type="text" name="weight" @class(['form-control']) value="{{ $vitals->weight ?? '' }}" placeholder="e.g., 70 kg">
                     </div>
                 </div>
                 <button @class(['btn', 'btn-sm', 'btn-outline-primary', 'mt-3'])>
-                    <i @class(['bi', 'bi-pencil', 'me-1'])></i>Edit Vitals
+                    <i @class(['bi', 'bi-pencil', 'me-1'])></i>Save Vitals
                 </button>
             </div>
             </form>
@@ -415,9 +639,79 @@
                     @csrf
                     <input type="text" name="patient_id" value="{{ $patient->id }}" hidden>
                
+                    <!-- Existing Disease History Display -->
+                    @if($diseaseHistories->isNotEmpty())
+                    <div @class(['mb-4'])>
+                        <h6 @class(['fw-bold', 'mb-3', 'text-primary'])>Existing Disease History</h6>
+                        <table @class(['table', 'table-bordered', 'table-sm'])>
+                            <thead @class(['bg-light'])>
+                                <tr>
+                                    <th style="width: 5%;">S.N</th>
+                                    <th style="width: 30%;">Name</th>
+                                    <th style="width: 15%;">Duration</th>
+                                    <th style="width: 15%;">Unit</th>
+                                    <th style="width: 15%;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($diseaseHistories as $index => $disease)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $disease->name }}</td>
+                                    <td>{{ $disease->duration_value ?? '-' }}</td>
+                                    <td>{{ ucfirst($disease->duration_unit ?? '-') }}</td>
+                                    <td>
+                                        <span class="badge {{ $disease->status ? 'bg-success' : 'bg-secondary' }}">
+                                            {{ $disease->status ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+
+                    <!-- Existing Drug History Display -->
+                    @if($drugHistories->isNotEmpty())
+                    <div @class(['mb-4'])>
+                        <h6 @class(['fw-bold', 'mb-3', 'text-primary'])>Existing Drug History</h6>
+                        <table @class(['table', 'table-bordered', 'table-sm'])>
+                            <thead @class(['bg-light'])>
+                                <tr>
+                                    <th style="width: 5%;">S.N</th>
+                                    <th style="width: 20%;">Drug Name</th>
+                                    <th style="width: 15%;">Dose</th>
+                                    <th style="width: 15%;">Frequency</th>
+                                    <th style="width: 20%;">For</th>
+                                    <th style="width: 10%;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($drugHistories as $index => $drug)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $drug->drug_name ?? '-' }}</td>
+                                    <td>{{ $drug->drug_dose ?? '-' }} {{ $drug->dose_unit ?? '' }}</td>
+                                    <td>{{ ucfirst(str_replace('_', ' ', $drug->drug_frequency ?? '-')) }}</td>
+                                    <td>{{ $drug->drug_for ?? '-' }}</td>
+                                    <td>
+                                        <span class="badge {{ $drug->status ? 'bg-success' : 'bg-secondary' }}">
+                                            {{ $drug->status ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+
+                    <hr class="my-4">
+
                     <!-- Disease History Section -->
                     <div @class(['mb-4'])>
-                        <h6 @class(['fw-bold', 'mb-3', 'text-primary'])>Disease History</h6>
+                        <h6 @class(['fw-bold', 'mb-3', 'text-primary'])>Add New Disease History</h6>
                         <table @class(['table', 'table-bordered', 'table-sm'])>
                             <thead @class(['bg-light'])>
                                 <tr>
@@ -461,7 +755,7 @@
 
                     <!-- Drug History Section -->
                     <div @class(['mb-4'])>
-                        <h6 @class(['fw-bold', 'mb-3', 'text-primary'])>Drug History</h6>
+                        <h6 @class(['fw-bold', 'mb-3', 'text-primary'])>Add New Drug History</h6>
                         <table @class(['table', 'table-bordered', 'table-sm'])>
                             <thead @class(['bg-light'])>
                                 <tr>
@@ -583,25 +877,67 @@
     <div @class(['tab-pane', 'fade']) id="diagnosis" role="tabpanel" aria-labelledby="diagnosis-tab">
         <div @class(['card', 'shadow-sm'])>
             <div @class(['card-header', 'bg-light', 'd-flex', 'justify-content-between', 'align-items-center'])>
-                <h6 @class(['mb-0'])>Diagnosis</h6>
+                <h6 @class(['mb-0'])>Add Diagnosis</h6>
             </div>
             <div @class(['card-body'])>
-                <div @class(['form-group'])>
-                    <label @class(['form-label'])>Primary Diagnosis</label>
-                    <input type="text" @class(['form-control']) placeholder="Enter primary diagnosis...">
-                </div>
-                <div @class(['form-group', 'mt-3'])>
-                    <label @class(['form-label'])>Secondary Diagnosis</label>
-                    <textarea @class(['form-control']) rows="3" placeholder="Enter secondary diagnoses if any..."></textarea>
-                </div>
-                <div @class(['form-group', 'mt-3'])>
-                    <label @class(['form-label'])>Follow Up</label>
-                    <input type="number" @class(['form-control']) placeholder="Enter follow up after... days">
-                </div>
+                <form method="POST" action="{{ route('visit.storeDiagnosis') }}">
+                    @csrf
+                    <input type="hidden" name="appointment_id" value="{{ $currentAppointment->id ?? '' }}">
+                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+                    
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label @class(['form-label'])>Primary Diagnosis <span class="text-danger">*</span></label>
+                            <input type="text" @class(['form-control']) name="primary_diagnosis" placeholder="Enter primary diagnosis..." required>
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label @class(['form-label'])>Secondary Diagnosis</label>
+                            <input type="text" @class(['form-control']) name="secondary_diagnosis" placeholder="Enter secondary diagnosis (optional)...">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label @class(['form-label'])>Follow-up (Days)</label>
+                            <input type="number" @class(['form-control']) name="follow_up_days" placeholder="e.g., 7" min="1">
+                        </div>
+                    </div>
+                    <button type="submit" @class(['btn', 'btn-primary', 'btn-sm'])>
+                        <i @class(['bi', 'bi-check-lg', 'me-1'])></i>Save Diagnosis
+                    </button>
+                </form>
+                
+                <!-- Existing Diagnoses -->
+                @if($diagnoses->isNotEmpty())
+                <hr class="my-4">
+                <h6 class="fw-bold mb-3">Current Visit Diagnoses</h6>
+                <table class="table table-bordered table-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>S.N</th>
+                            <th>Primary Diagnosis</th>
+                            <th>Secondary Diagnosis</th>
+                            <th>Follow-up (Days)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($diagnoses as $index => $diag)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $diag->primary_diagnosis }}</td>
+                            <td>{{ $diag->secondary_diagnosis ?? '-' }}</td>
+                            <td>{{ $diag->follow_up_days ?? '-' }}</td>
+                            <td>
+                                <form action="{{ route('visit.destroyDiagnosis', $diag->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this diagnosis?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @endif
             </div>
-            <button @class(['btn', 'btn-primary', 'btn-sm', 'mt-3'])>
-                <i @class(['bi', 'bi-check-lg', 'me-1'])></i>Save Diagnosis
-            </button>
         </div>
     </div>
 
@@ -609,85 +945,137 @@
     <div @class(['tab-pane', 'fade']) id="medication" role="tabpanel" aria-labelledby="medication-tab">
         <div @class(['card', 'shadow-sm'])>
             <div @class(['card-header', 'bg-light', 'd-flex', 'justify-content-between', 'align-items-center'])>
-                <h6 @class(['mb-0'])>Medication</h6>
+                <h6 @class(['mb-0'])>Prescribe Medication</h6>
             </div>
             <div @class(['card-body'])>
-                <div id="medicationContainer">
-                    <form id="medicationForm" method="POST" >
-                        @csrf
-                        <input type="text" name="patient_id" value="{{ $patient->id }}" hidden>
-                        <div class="medication-item mb-3 p-3 border rounded position-relative">
-                            <div class="row">
+                <form action="{{ route('visit.storeMedication') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="appointment_id" value="{{ $currentAppointment->id ?? '' }}">
+                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+                    <div class="row">
                         <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold">Drug Name</label>
-                            <input type="text" class="form-control" placeholder="e.g., Aspirin">
+                            <label class="form-label fw-bold">Drug Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="drug_name" placeholder="e.g., Aspirin" required>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold">Route</label>
-                            <select class="form-select">
+                            <label class="form-label fw-bold">Route <span class="text-danger">*</span></label>
+                            <select class="form-select" name="route" required>
                                 <option value="">Select route</option>
                                 <option value="oral">Oral</option>
                                 <option value="intramuscular">Intramuscular</option>
                                 <option value="intravenous">Intravenous</option>
                                 <option value="subcutaneous">Subcutaneous</option>
                                 <option value="topical">Topical</option>
+                                <option value="inhalation">Inhalation</option>
+                                <option value="rectal">Rectal</option>
+                                <option value="sublingual">Sublingual</option>
                             </select>
                         </div>
                         <div class="col-md-2 mb-3">
-                            <label class="form-label fw-bold">Dose</label>
-                            <input type="text" class="form-control" placeholder="500">
+                            <label class="form-label fw-bold">Dose <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="dose" placeholder="500" required>
                         </div>
                         <div class="col-md-2 mb-3">
-                            <label class="form-label fw-bold">Units</label>
-                            <select class="form-select">
+                            <label class="form-label fw-bold">Units <span class="text-danger">*</span></label>
+                            <select class="form-select" name="dose_unit" required>
                                 <option value="">Select</option>
                                 <option value="mg">mg</option>
                                 <option value="g">g</option>
                                 <option value="ml">ml</option>
+                                <option value="mcg">mcg</option>
+                                <option value="tablet">Tablet</option>
                                 <option value="capsule">Capsule</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold">Frequency</label>
-                            <select class="form-select">
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold">Frequency <span class="text-danger">*</span></label>
+                            <select class="form-select" name="frequency" required>
                                 <option value="">Select</option>
                                 <option value="once_daily">Once a day</option>
                                 <option value="twice_daily">Twice a day</option>
                                 <option value="thrice_daily">Thrice a day</option>
+                                <option value="four_times_daily">Four times a day</option>
+                                <option value="every_4_hours">Every 4 hours</option>
+                                <option value="every_6_hours">Every 6 hours</option>
+                                <option value="every_8_hours">Every 8 hours</option>
+                                <option value="every_12_hours">Every 12 hours</option>
+                                <option value="weekly">Weekly</option>
                                 <option value="as_needed">As needed</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-2 mb-3">
                             <label class="form-label fw-bold">Duration</label>
-                            <input type="number" class="form-control" placeholder="7">
+                            <input type="number" class="form-control" name="duration_value" placeholder="7">
                         </div>
                         <div class="col-md-2 mb-3">
-                            <label class="form-label fw-bold">Unit</label>
-                            <select class="form-select">
+                            <label class="form-label fw-bold">Duration Unit</label>
+                            <select class="form-select" name="duration_unit">
                                 <option value="">Select</option>
                                 <option value="days">Days</option>
                                 <option value="weeks">Weeks</option>
                                 <option value="months">Months</option>
                             </select>
                         </div>
-                        <div class="col-md-5 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Instructions</label>
-                            <textarea class="form-control" rows="1" placeholder="Take with food"></textarea>
+                            <textarea class="form-control" name="instructions" rows="1" placeholder="e.g., Take with food"></textarea>
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-lg me-1"></i> Add
+                            </button>
                         </div>
                     </div>
-                        </div>
-                        <!-- Add more medication items dynamically -->
-                        <!-- End of dynamic medication items -->
-                    </form>
-                </div>
-                <button type="button" @class(['btn', 'btn-primary', 'btn-sm']) id="addMedBtn">
-                    <i @class(['bi', 'bi-plus-lg', 'me-1'])></i>
-                </button>
-                <button type="button" @class(['btn', 'btn-success', 'btn-sm', 'ms-2']) id="saveMedBtn">
-                    <i @class(['bi', 'bi-check-lg', 'me-1'])></i>Save Medications
-                </button>
+                </form>
+
+                <!-- Current Visit Medications -->
+                <h6 class="mt-4 mb-3">Current Prescriptions</h6>
+                @if(isset($medications) && $medications->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Drug Name</th>
+                                    <th>Route</th>
+                                    <th>Dose</th>
+                                    <th>Frequency</th>
+                                    <th>Duration</th>
+                                    <th>Instructions</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($medications as $index => $medication)
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $medication->drug_name }}</td>
+                                        <td><span class="badge bg-secondary">{{ ucfirst($medication->route) }}</span></td>
+                                        <td>{{ $medication->dose }} {{ $medication->dose_unit }}</td>
+                                        <td>{{ $medication->formatted_frequency ?? str_replace('_', ' ', ucfirst($medication->frequency)) }}</td>
+                                        <td>{{ $medication->duration_value ? $medication->duration_value . ' ' . $medication->duration_unit : '-' }}</td>
+                                        <td>{{ $medication->instructions ?? '-' }}</td>
+                                        <td>
+                                            <form action="{{ route('visit.destroyMedication', $medication->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this medication?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>No medications prescribed for this visit yet.
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -789,7 +1177,8 @@
                                         data-id="${service.id}" 
                                         data-name="${service.name}" 
                                         data-code="${service.code || ''}" 
-                                        data-price="${service.price || 0}">
+                                        data-price="${service.price || 0}"
+                                        data-type="${service.type}">
                                         <div class="fw-semibold">${service.name}</div>
                                         <small class="text-muted">${service.code || ''} | Rs. ${parseFloat(service.price || 0).toFixed(2)}</small>
                                     </div>
@@ -816,8 +1205,11 @@
 
                     // Populate service_id and service_type with valid values
                     serviceId.value = item.dataset.id;
-                    serviceType.value = item.dataset.type === 'LabTest' ? 'App\\Models\\LabTest' : 'App\\Models\\LabGroup';
+                    serviceType.value = item.dataset.type; // Use the type directly from API
                     serviceInput.value = item.dataset.name;
+
+                    // Hide the results dropdown
+                    row.querySelector('.service-results').style.display = 'none';
 
                     // Ensure service_id is valid and matches the dataset
                     if (!serviceId.value) {

@@ -10,7 +10,7 @@ class LabOrderController extends Controller
     public function show($id)
     {
         $labOrder = LabOrder::with([
-            'services.service_',
+            'service',
             'appointment.patient',
             'appointment.doctor.user',
         ])->findOrFail($id);

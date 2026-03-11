@@ -58,7 +58,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
-            <i class="bi bi-flask me-2"></i>Ordered Tests / Services
+            <i class="bi bi-flask me-2"></i>Ordered Test / Service
         </h5>
     </div>
     <div class="card-body p-0">
@@ -74,36 +74,31 @@
                 </thead>
                 <tbody>
                     @php
-                        $total = 0;
+                        $model = $labOrder->service;
+                        $name = $model->name ?? 'N/A';
+                        $type = $labOrder->service_type == 'App\\Models\\LabTest' ? 'Lab Test' : ($labOrder->service_type == 'App\\Models\\LabGroup' ? 'Lab Group' : 'Service');
+                        $price = $model->price ?? $model->charge_amount ?? 0;
                     @endphp
-                    @forelse($labOrder->services as $index => $service)
-                        @php
-                            $model= $service->service_type;
-                            $labGroup = $service->labGroup;
-                            $name = $labGroup ?? 'N/A';
-                            $type = class_basename($model) ?? 'Service';
-                            $price = $model->price ?? $model->charge_amount ?? 0;
-                            $total += $price;
-                        @endphp
+                    @if($model)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>1</td>
                             <td>{{ $name }}</td>
-                            <td>{{ $type }}</td>
+                            <td><span class="badge bg-{{ $labOrder->service_type == 'App\\Models\\LabTest' ? 'info' : 'primary' }}">{{ $type }}</span></td>
                             <td>Rs. {{ number_format($price, 2) }}</td>
                         </tr>
-                    @empty
+                    @else
                         <tr>
                             <td colspan="4" class="text-center py-3 text-muted">
-                                No services found for this order.
+                                No service found for this order.
                             </td>
                         </tr>
-                    @endforelse
+                    @endif
                 </tbody>
-                @if($labOrder->services->isNotEmpty())
+                @if($model)
                     <tfoot>
                         <tr>
                             <th colspan="3" class="text-end">Estimated Total</th>
-                            <th>Rs. {{ number_format($total, 2) }}</th>
+                            <th>Rs. {{ number_format($price, 2) }}</th>
                         </tr>
                     </tfoot>
                 @endif
@@ -112,11 +107,11 @@
     </div>
 </div>
 
-@if($labOrder->services->isNotEmpty() && $labOrder->appointment && $labOrder->appointment->patient)
+@if($labOrder->service && $labOrder->appointment && $labOrder->appointment->patient)
     <div class="d-flex justify-content-end">
-        <a href="{{ route('bills.create', ['lab_order_id' => $labOrder->id]) }}"
+        <a href="{{ route('bills.create', ['appointment_id' => $labOrder->appointment_id]) }}"
            class="btn btn-primary">
-            <i class="bi bi-receipt me-2"></i>Generate Bill for this Order
+            <i class="bi bi-receipt me-2"></i>Generate Bill for Appointment
         </a>
     </div>
 @endif

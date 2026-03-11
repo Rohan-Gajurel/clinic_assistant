@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
 use App\Models\LabOrder;
+use App\Models\ObservationExamination;
+use App\Models\Diagnosis;
+use App\Models\Medication;
 use App\Models\Patient;
 use App\Models\Service;
 use App\Models\User;
@@ -115,7 +119,8 @@ class PatientController extends Controller
     
     public function visitDetails(Request $request, $id)
     {
-        $patient = Patient::findOrFail($id);
+        $patient = Patient::with(['observationVitals', 'diseaseHistory', 'drugHistory'])->findOrFail($id);
+        
         if($patient->appointments->isEmpty()){
             return redirect()->route('appointments.create', $patient->id)->with('info', 'Visit details are only available for patients with upcoming or ongoing appointments.');
         }
@@ -143,12 +148,53 @@ class PatientController extends Controller
             }
         }
 
-            $labOrders = LabOrder::where('appointment_id', $currentAppointment->id)->get(['id']);
-            $services = collect();
-            if ($labOrders->isNotEmpty()) {
-                $services = Service::whereIn('lab_order_id', $labOrders->pluck('id'))->get();
+        // Fetch vitals
+        $vitals = $patient->observationVitals;
+
+        // Fetch examination data
+        $examination = ObservationExamination::where('patient_id', $patient->id)->latest()->first();
+
+        // Fetch disease and drug history
+        $diseaseHistories = $patient->diseaseHistory;
+        $drugHistories = $patient->drugHistory;
+
+        // Fetch diagnoses for current appointment
+        $diagnoses = Diagnosis::where('appointment_id', $currentAppointment->id)->get();
+
+        // Fetch medications for current appointment
+        $medications = Medication::where('appointment_id', $currentAppointment->id)->get();
+
+        // Fetch lab orders with service (test or group)
+        $labOrders = LabOrder::where('appointment_id', $currentAppointment->id)
+            ->with(['service', 'labResults.labTest'])
+            ->get();
+
+        // Fetch dispatched lab results from bills for this appointment
+        $dispatchedResults = Bill::where('appointment_id', $currentAppointment->id)
+            ->with(['dispatchedItems.service', 'dispatchedItems.labResults.labTest'])
+            ->get()
+            ->pluck('dispatchedItems')
+            ->flatten();
+        
+        // Load tests for LabGroup services in dispatched items
+        foreach ($dispatchedResults as $item) {
+            if ($item->isLabGroup() && $item->service) {
+                $item->service->load('tests');
             }
-        return view('backend.patients.visit_details', compact('patient', 'currentAppointment', 'labOrders', 'services'));
+        }
+
+        return view('backend.patients.visit_details', compact(
+            'patient', 
+            'currentAppointment', 
+            'labOrders',
+            'dispatchedResults',
+            'vitals',
+            'examination',
+            'diseaseHistories',
+            'drugHistories',
+            'diagnoses',
+            'medications'
+        ));
     }
 
 }

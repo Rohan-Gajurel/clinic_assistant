@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class LabResult extends Model
 {
     protected $fillable = [
+        'bill_item_id',
         'lab_order_id',
         'lab_test_id',
-        'service_id',
         'numeric_value',
         'text_value',
         'reference_from',
@@ -32,6 +32,14 @@ class LabResult extends Model
     ];
 
     /**
+     * Get the bill item that owns this result
+     */
+    public function billItem()
+    {
+        return $this->belongsTo(BillItem::class);
+    }
+
+    /**
      * Get the lab order that owns this result
      */
     public function labOrder()
@@ -45,14 +53,6 @@ class LabResult extends Model
     public function labTest()
     {
         return $this->belongsTo(LabTest::class);
-    }
-
-    /**
-     * Get the service for this result
-     */
-    public function service()
-    {
-        return $this->belongsTo(Service::class);
     }
 
     /**

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('lab_orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('appointment_id')->constrained('appointments')->onDelete('cascade');
+            $table->string('service_type')->nullable();
+            $table->unsignedBigInteger('service_id')->nullable();
             $table->timestamps();
         });
     }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Bill;
 use App\Models\BillItem;
 use App\Models\DiseaseHistory;
+use App\Models\Diagnosis;
+use App\Models\Medication;
 use App\Models\LabOrder;
 use App\Models\ObservationExamination;
 use App\Models\ObservationVital;
@@ -125,18 +127,14 @@ class VisitController extends Controller
 
         DB::beginTransaction();
         try {
-            $labOrder = LabOrder::create([
-                'appointment_id' => $data['appointment_id'],
-            ]);
-
-            // Log each service being processed
+            // Create one LabOrder per service (test or group)
             foreach ($data['lab_orders'] as $index => $order) {
                 Log::info("Processing service #{$index}", $order);
 
-                Service::create([
-                    'service_id' => $order['service_id'],
+                LabOrder::create([
+                    'appointment_id' => $data['appointment_id'],
                     'service_type' => $order['service_type'],
-                    'lab_order_id' => $labOrder->id,
+                    'service_id' => $order['service_id'],
                 ]);
             }
 
@@ -147,6 +145,109 @@ class VisitController extends Controller
             Log::error('Error saving lab orders: '.$e->getMessage());
             return redirect()->back()->with('error', 'An error occurred while saving lab orders. Please try again.');
         }
+    }
+
+    /**
+     * Store a new diagnosis
+     */
+    public function storeDiagnosis(Request $request)
+    {
+        $data = $request->validate([
+            'appointment_id' => 'required|exists:appointments,id',
+            'primary_diagnosis' => 'nullable|string|max:255',
+            'secondary_diagnosis' => 'nullable|string|max:255',
+            'follow_up_days' => 'nullable|integer',
+        ]);
+
+        $data['status'] = $data['status'] ?? 'active';
+
+        Diagnosis::create($data);
+        return redirect()->back()->with('success', 'Diagnosis saved successfully.');
+    }
+
+    /**
+     * Update an existing diagnosis
+     */
+    public function updateDiagnosis(Request $request, $id)
+    {
+        $diagnosis = Diagnosis::findOrFail($id);
+
+        $data = $request->validate([
+            'diagnosis_name' => 'required|string|max:255',
+            'primary_diagnosis' => 'nullable|string|max:255',
+            'secondary_diagnosis' => 'nullable|string|max:255',
+            'follow_up_days' => 'nullable|integer',
+        ]);
+
+        $diagnosis->update($data);
+        return redirect()->back()->with('success', 'Diagnosis updated successfully.');
+    }
+
+    /**
+     * Delete a diagnosis
+     */
+    public function destroyDiagnosis($id)
+    {
+        $diagnosis = Diagnosis::findOrFail($id);
+        $diagnosis->delete();
+        return redirect()->back()->with('success', 'Diagnosis deleted successfully.');
+    }
+
+    /**
+     * Store a new medication
+     */
+    public function storeMedication(Request $request)
+    {
+        $data = $request->validate([
+            'appointment_id' => 'required|exists:appointments,id',
+            'drug_name' => 'required|string|max:255',
+            'route' => 'nullable|in:oral,intramuscular,intravenous,subcutaneous,topical,inhalation,rectal,sublingual',
+            'dose' => 'nullable|string',
+            'dose_unit' => 'nullable|string',
+            'frequency' => 'nullable|in:once_daily,twice_daily,thrice_daily,four_times_daily,as_needed,every_4_hours,every_6_hours,every_8_hours,every_12_hours,weekly',
+            'duration_value' => 'nullable|integer',
+            'duration_unit' => 'nullable|in:days,weeks,months',
+            'instructions' => 'nullable|string',
+        ]);
+
+        $data['status'] = $data['status'] ?? 'active';
+        $data['route'] = $data['route'] ?? 'oral';
+
+        Medication::create($data);
+        return redirect()->back()->with('success', 'Medication saved successfully.');
+    }
+
+    /**
+     * Update an existing medication
+     */
+    public function updateMedication(Request $request, $id)
+    {
+        $medication = Medication::findOrFail($id);
+
+        $data = $request->validate([
+            'drug_name' => 'required|string|max:255',
+            'route' => 'nullable|in:oral,intramuscular,intravenous,subcutaneous,topical,inhalation,rectal,sublingual',
+            'dose' => 'nullable|string',
+            'dose_unit' => 'nullable|string',
+            'frequency' => 'nullable|in:once_daily,twice_daily,thrice_daily,four_times_daily,as_needed,every_4_hours,every_6_hours,every_8_hours,every_12_hours,weekly',
+            'duration_value' => 'nullable|integer',
+            'duration_unit' => 'nullable|in:days,weeks,months',
+            'instructions' => 'nullable|string',
+            'status' => 'nullable|in:active,completed,discontinued',
+        ]);
+
+        $medication->update($data);
+        return redirect()->back()->with('success', 'Medication updated successfully.');
+    }
+
+    /**
+     * Delete a medication
+     */
+    public function destroyMedication($id)
+    {
+        $medication = Medication::findOrFail($id);
+        $medication->delete();
+        return redirect()->back()->with('success', 'Medication deleted successfully.');
     }
 
 }

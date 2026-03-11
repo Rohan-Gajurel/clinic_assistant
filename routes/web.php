@@ -5,7 +5,6 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DoctorController;
-use App\Http\Controllers\FollowupController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\LabCategoryController;
 use App\Http\Controllers\LabController;
@@ -17,7 +16,6 @@ use App\Http\Controllers\LabTestController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
@@ -44,8 +42,6 @@ Route::prefix('appointments')->controller(AppointmentController::class)->group(f
 });
 
 Route::get('/doctor', [DoctorController::class, 'frontendDoctors'])->name('frontend.doctors');
-
-Route::get('/followup', [FollowupController::class, 'frontendFollowups'])->name('frontend.followups');
 
 Route::prefix('feedback')->controller(FeedbackController::class)->group(function(){
     Route::get('/create', 'create')->name('feedback.create');
@@ -124,26 +120,10 @@ Route::prefix('appointments')->controller(AppointmentController::class)->group(f
     Route::put('/cancel/{id}', 'cancelAppointment')->name('appointments.cancel');
 });
 
-Route::prefix('followups')->controller(FollowupController::class)->group(function(){
-    Route::get('/', 'index')->name('followups.index');
-    Route::get('/create', 'create')->name('followups.create');
-    Route::post('/', 'store')->name('followups.store');
-    Route::patch('/{id}', 'update')->name('followups.update');
-    Route::delete('/{id}', 'destroy')->name('followups.destroy');
-});
-
 Route::prefix('feedback')->controller(FeedbackController::class)->group(function(){
     Route::get('/', 'index')->name('feedback.index');
     Route::get('/create', 'create')->name('feedback.create');
     Route::post('/', 'store')->name('feedback.store');
-});
-
-Route::prefix('reminders')->controller(ReminderController::class)->group(function(){
-    Route::get('/', 'index')->name('reminders.index');
-    Route::get('/create', 'create')->name('reminders.create');
-    Route::post('/', 'store')->name('reminders.store');
-    Route::patch('/{id}', 'update')->name('reminders.update');
-    Route::delete('/{id}', 'destroy')->name('reminders.destroy');
 });
 
 Route::prefix('departments')->controller(DepartmentController::class)->group(function(){
@@ -160,6 +140,16 @@ Route::prefix('visit')->controller(VisitController::class)->group(function(){
     Route::post('/store-vitals', 'upsertVitals')->name('visit.storeVitals');
     Route::post('/store-disease-history', 'storeDiseaseHistory')->name('visit.storeDiseaseHistory');
     Route::post('/store-lab-order', 'storeLabOrders')->name('visit.storeLabOrders');
+    
+    // Diagnosis routes
+    Route::post('/store-diagnosis', 'storeDiagnosis')->name('visit.storeDiagnosis');
+    Route::put('/update-diagnosis/{id}', 'updateDiagnosis')->name('visit.updateDiagnosis');
+    Route::delete('/delete-diagnosis/{id}', 'destroyDiagnosis')->name('visit.destroyDiagnosis');
+    
+    // Medication routes
+    Route::post('/store-medication', 'storeMedication')->name('visit.storeMedication');
+    Route::put('/update-medication/{id}', 'updateMedication')->name('visit.updateMedication');
+    Route::delete('/delete-medication/{id}', 'destroyMedication')->name('visit.destroyMedication');
 });
 
 

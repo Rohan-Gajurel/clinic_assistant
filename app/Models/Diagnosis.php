@@ -4,19 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Followup extends Model
+class Diagnosis extends Model
 {
-    //
     protected $fillable = [
         'appointment_id',
-        'notes',
-        'followup_date',
-        'followup_time',
-        'status',
-    ];  
+        'primary_diagnosis',
+        'secondary_diagnosis',
+        'follow_up_days',
+    ];
 
     public function appointment()
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class);
     }
 }

@@ -25,14 +25,10 @@ class RequestFeedback implements ShouldQueue
      */
     public function handle(): void
     {
-        // Fetch users with completed appointments or follow-ups from the previous day
+        // Fetch users with completed appointments from the previous day
         $users = User::whereHas('patient.appointments', function ($query) {
             $query->where('status', 'completed')
                   ->whereDate('appointment_date', now()->subDays(1)->toDateString());
-        })
-        ->orWhereHas('patient.appointments.followups', function ($query) {
-            $query->where('status', 'completed')
-                  ->whereDate('followup_date', now()->subDays(1)->toDateString());
         })
         ->get()
         ->unique('id'); 

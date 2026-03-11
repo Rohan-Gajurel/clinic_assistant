@@ -30,14 +30,19 @@ class Appointment extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    public function followups()
-    {
-        return $this->hasMany(Followup::class);
-    }
-
     public function labOrders()
     {
         return $this->hasMany(LabOrder::class);
+    }
+
+    public function diagnoses()
+    {
+        return $this->hasMany(Diagnosis::class);
+    }
+
+    public function medications()
+    {
+        return $this->hasMany(Medication::class);
     }
 
 }

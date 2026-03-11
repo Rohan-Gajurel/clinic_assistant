@@ -32,11 +32,6 @@
                    Appointment History
                   </a>
                 </li>
-                <li>
-                  <a class="dropdown-item py-2" href="{{ route('frontend.followups') }}">
-                   Follow-up
-                  </a>
-                </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <form action="{{ route('logout') }}" method="POST">

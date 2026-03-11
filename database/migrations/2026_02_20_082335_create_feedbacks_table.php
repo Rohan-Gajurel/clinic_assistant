@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('feedbacks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('doctor_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignId('patient_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('patient_id')->constrained('patients')->onDelete('cascade');
             $table->integer('rating');
             $table->text('review')->nullable();
             $table->boolean('would_recommend')->default(false);

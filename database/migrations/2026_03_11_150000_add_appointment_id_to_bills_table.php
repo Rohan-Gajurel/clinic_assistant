@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reminders', function (Blueprint $table) {
-            $table->boolean('sent')->default(false)->after('status')->comment('Track if reminder has been dispatched');
+        Schema::table('bills', function (Blueprint $table) {
+            $table->foreignId('appointment_id')->nullable()->after('patient_id')->constrained('appointments')->onDelete('set null');
         });
     }
 
@@ -21,8 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reminders', function (Blueprint $table) {
-            $table->dropColumn('sent');
+        Schema::table('bills', function (Blueprint $table) {
+            $table->dropForeign(['appointment_id']);
+            $table->dropColumn('appointment_id');
         });
     }
 };

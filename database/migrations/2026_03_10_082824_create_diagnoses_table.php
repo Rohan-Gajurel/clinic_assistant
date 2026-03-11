@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('followups', function (Blueprint $table) {
+        Schema::create('diagnoses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('appointment_id')->constrained()->onDelete('cascade');
-            $table->text('notes')->nullable();
-            $table->date('followup_date');
-            $table->time('followup_time');
-            $table->enum('status', ['pending', 'completed'])->default('pending');
+            $table->string('primary_diagnosis');
+            $table->string('secondary_diagnosis')->nullable();
+            $table->integer('follow_up_days')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('followups');
+        Schema::dropIfExists('diagnoses');
     }
 };

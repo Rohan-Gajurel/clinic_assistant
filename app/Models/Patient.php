@@ -45,11 +45,6 @@ class Patient extends Model
         return $this->hasMany(Appointment::class);
     }
 
-    public function medicationReminders()
-    {
-        return $this->hasMany(Reminder::class);
-    }
-
     public function observationVitals()
     {
         return $this->hasOne(ObservationVital::class);
@@ -63,5 +58,15 @@ class Patient extends Model
     public function drugHistory()
     {
         return $this->hasMany(DrugHistory::class);
+    }
+
+    public function diagnoses()
+    {
+        return $this->hasMany(Diagnosis::class);
+    }
+
+    public function medications()
+    {
+        return $this->hasMany(Medication::class);
     }
 }

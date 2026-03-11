@@ -19,23 +19,30 @@ class BillController extends Controller
 
     public function create(Request $request)
     {
-        $labOrder = null;
+        $labOrders = collect();
+        $patient = null;
+        $appointment = null;
 
-        $labOrderId = $request->query('lab_order_id');
-        if ($labOrderId) {
-            $labOrder = LabOrder::with([
-                'services.service_',
-                'appointment.patient',
-            ])->findOrFail($labOrderId);
+        $appointmentId = $request->query('appointment_id');
+        if ($appointmentId) {
+            $labOrders = LabOrder::with(['service', 'appointment.patient'])
+                ->where('appointment_id', $appointmentId)
+                ->get();
+            
+            if ($labOrders->isNotEmpty()) {
+                $appointment = $labOrders->first()->appointment;
+                $patient = $appointment->patient;
+            }
         }
 
-        return view('backend.bill.create', compact('labOrder'));
+        return view('backend.bill.create', compact('labOrders', 'patient', 'appointment'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'patient_id' => 'required|exists:patients,id',
+            'appointment_id' => 'nullable|exists:appointments,id',
             'gross_amount' => 'required|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
             'net_amount' => 'required|numeric|min:0',
@@ -52,6 +59,7 @@ class BillController extends Controller
 
         $bill = Bill::create([
             'patient_id' => $data['patient_id'],
+            'appointment_id' => $data['appointment_id'] ?? null,
             'gross_amount' => $data['gross_amount'],
             'discount_amount' => $data['discount_amount'] ?? 0,
             'net_amount' => $data['net_amount'],

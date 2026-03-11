@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('lab_order_id')->constrained('lab_orders')->onDelete('cascade');
             $table->foreignId('lab_test_id')->constrained('lab_tests')->onDelete('cascade');
-            $table->foreignId('service_id')->nullable()->constrained('services')->onDelete('cascade');
             
             // Result value - can be numeric or text based on lab_test result_type
             $table->decimal('numeric_value', 15, 4)->nullable();

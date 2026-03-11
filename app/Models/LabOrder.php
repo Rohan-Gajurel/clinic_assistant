@@ -8,6 +8,8 @@ class LabOrder extends Model
 {
     protected $fillable = [
         'appointment_id',
+        'service_type',
+        'service_id',
         'sample_id',
         'status',
         'collected_at',
@@ -35,9 +37,12 @@ class LabOrder extends Model
         return $this->belongsTo(Appointment::class);
     }
 
-    public function services()
+    /**
+     * Get the related service (LabTest or LabGroup)
+     */
+    public function service()
     {
-        return $this->hasMany(Service::class);
+        return $this->morphTo('service', 'service_type', 'service_id');
     }
 
     public function labResults()
